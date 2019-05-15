@@ -24,12 +24,14 @@ menu_def = [['Setup', ['Input File', 'Output File', 'Backup Folder']],
 layout = [
     [sg.Menu(menu_def, tearoff=False, pad=(20, 1))],
     [sg.T('')],
+    [sg.T('Input file path:', text_color='#FFFFFF')],
+    [sg.T('', size=(200, 1), key='_INPUT_FILE_PATH_', font=('verdana', 8)), ],
     [sg.T('')],
-    [sg.T('', size=(200, 1), key='_INPUT_FILE_PATH_'), ],
+    [sg.T('Output file path:', text_color='#FFFFFF')],
+    [sg.T('', size=(200, 1), key='_OUTPUT_FILE_PATH_', font=('verdana', 8)), ],
     [sg.T('')],
-    [sg.T('', size=(200, 1), key='_OUTPUT_FILE_PATH_'), ],
-    [sg.T('')],
-    [sg.T('', size=(200, 1), key='_BACKUP_FOLDER_PATH_'), ],
+    [sg.T('Backup file folder path:', text_color='#FFFFFF')],
+    [sg.T('', size=(200, 1), key='_BACKUP_FOLDER_PATH_', font=('verdana', 8)), ],
     [sg.T('')],
     [sg.T('')],
     [sg.Button('', visible=False, size=(12, 1), ), ],
@@ -113,7 +115,7 @@ def core_tasks(ws1_file, ws2_file, backup_folder_str):
         and dictionaries. """
 
     wb1, ws1, ws1_unit_list, ws1_dict = populate_data_objects(ws1_file, 'C', 'O', 1, 'Sheet1')
-    wb2, ws2, ws2_unit_list, ws2_dict = populate_data_objects(ws2_file, 'B', 'D', 6, 'Lien Sale Tracker')
+    wb2, ws2, ws2_unit_list, ws2_dict = populate_data_objects(ws2_file, 'B', 'D', 6, 'Auction Tracker')
     wb2.save(backup_folder_str[:-5] + datetime.now().strftime('%Y-%m-%d %H%M%S') + '.xlsx')
 
     # Determine units to delete from the output spreadsheet (paid accounts). The paid_unit_list will contain units
@@ -121,36 +123,31 @@ def core_tasks(ws1_file, ws2_file, backup_folder_str):
     # dates which are different than dates on the input spreadsheet.
 
     sheet_row = 7
-    i = 0
-    while True:
-        if i == len(ws2_unit_list):
-            break
+    initial_list_len = len(ws2_unit_list)
+    for i in range(0, initial_list_len):
         if ws2_unit_list[i] not in ws1_unit_list:
-            del ws2_unit_list[i]
             ws2.delete_rows(sheet_row)
-        sheet_row += 1
-        i += 1
+        else:
+            sheet_row += 1
 
     wb2.save(ws2_file)
     wb2.close()
-    wb2, ws2, ws2_unit_list, ws2_dict = populate_data_objects(ws2_file, 'B', 'D', 6, 'Lien Sale Tracker')
+    wb2, ws2, ws2_unit_list, ws2_dict = populate_data_objects(ws2_file, 'B', 'D', 6, 'Auction Tracker')
 
     sheet_row = 7
-    i = 0
-    while True:
-        if i == len(ws2_unit_list):
-            break
+    initial_list_len = len(ws2_unit_list)
+    for i in range(0, initial_list_len):
         if ws2_unit_list[i] in ws2_dict and ws2_unit_list[i] in ws1_dict:
             if str(parse(str(ws2_dict[ws2_unit_list[i]])).date()) != str(parse(str(ws1_dict[ws2_unit_list[i]])).date()):
-                del ws2_unit_list[i]
                 ws2.delete_rows(sheet_row)
-        sheet_row += 1
-        i += 1
+        else:
+            sheet_row += 1
 
     # Add new past-due accounts.
     wb2.save(ws2_file)
     wb2.close()
-    wb2, ws2, ws2_unit_list, ws2_dict = populate_data_objects(ws2_file, 'B', 'D', 6, 'Lien Sale Tracker')
+    wb2, ws2, ws2_unit_list, ws2_dict = populate_data_objects(ws2_file, 'B', 'D', 6, 'Auction Tracker')
+
     i = 0
     sheet_row = 7 + len(ws2_unit_list)
     while True:
@@ -165,7 +162,8 @@ def core_tasks(ws1_file, ws2_file, backup_folder_str):
     # Make dates match input.
     wb2.save(ws2_file)
     wb2.close()
-    wb2, ws2, ws2_unit_list, ws2_dict = populate_data_objects(ws2_file, 'B', 'D', 6, 'Lien Sale Tracker')
+    wb2, ws2, ws2_unit_list, ws2_dict = populate_data_objects(ws2_file, 'B', 'D', 6, 'Auction Tracker')
+
     i = 0
     sheet_row = 7
     while True:
@@ -193,12 +191,12 @@ if __name__ == '__main__':
     ws2_file_path = file_path_dict['output']
     backup_folder_str = file_path_dict['backup']
     path_length = max(len(ws1_file_path), len(ws2_file_path), len(backup_folder_str))
-    window = sg.Window(" Jeff's Auction Planner Utility", size=(path_length + 700, 400), default_element_size=(30, 1),
+    window = sg.Window(" Jeff's Auction Planner Utility", size=(path_length + 700, 450), default_element_size=(30, 1),
                        grab_anywhere=False, background_color='#1E1E1E', auto_size_text=False,
                        auto_size_buttons=False).Layout(layout).Finalize()
-    window.Element('_INPUT_FILE_PATH_').Update(f'Input file path: {ws1_file_path}')
-    window.Element('_OUTPUT_FILE_PATH_').Update(f'Output file path: {ws2_file_path}')
-    window.Element('_BACKUP_FOLDER_PATH_').Update(f'Backup file folder path: {backup_folder_str}')
+    window.Element('_INPUT_FILE_PATH_').Update(ws1_file_path)
+    window.Element('_OUTPUT_FILE_PATH_').Update(ws2_file_path)
+    window.Element('_BACKUP_FOLDER_PATH_').Update(backup_folder_str)
     while True:
         event, values = window.Read(timeout=10)
         if event is None or event == 'Exit':
